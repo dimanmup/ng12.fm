@@ -17,6 +17,7 @@ class Node {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  title: string = '';
   id: number = 1;
   tree: Node[] = [];
   treeControl = new NestedTreeControl<Node>(node => node.children);
