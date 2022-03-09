@@ -28,7 +28,10 @@ export class AppComponent {
       new Node(this.nextId(), '1', true, [
         new Node(this.nextId(), '1.1'),
         new Node(this.nextId(), '1.2'),
-        new Node(this.nextId(), '1.3')
+        new Node(this.nextId(), '1.3', true, [
+          new Node(this.nextId(), '1.3.1'),
+          new Node(this.nextId(), '1.3.2')
+        ])
       ]),
       new Node(this.nextId(), '2'),
       new Node(this.nextId(), '3', true)
