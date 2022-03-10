@@ -29,6 +29,7 @@ export class AppComponent {
 
   // Level context
   nextId: number = 1;
+  toggledId: number = 0;
   selectedId: number = 0;
   children: Node[] = [];
 
@@ -48,8 +49,13 @@ export class AppComponent {
 
     this.childrenSubscription = this.childrenRef.valueChanges
       .subscribe(result => {
-        this.children = result.data.children.map(c => new Node(this.genNextId(), c.name, c.path, c.dateOfReceiving, c.isParent));
-        this.add(this.selectedId, this.children);
+        this.children = result.data.children.map(c => new Node(this.genNextId(), 
+          c.name, 
+          c.path, 
+          c.dateOfReceiving, 
+          c.isParent));
+
+        this.add(this.toggledId, this.children);
         this.refresh();
       });
   }
@@ -108,12 +114,16 @@ export class AppComponent {
   }
 
   toggle(node: Node): void {
-    this.selectedId = node.id;
+    this.toggledId = node.id;
     
     if (this.treeControl.isExpanded(node))
       this.childrenRef?.refetch({parentPath: node.path});
     else
       this.clear(node.id);
+  }
+
+  select(node: Node): void {
+    this.selectedId = node.id;
   }
 
 }

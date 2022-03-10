@@ -13,15 +13,15 @@ public class Query
         }
         */
         
-        DirectoryInfo di = new DirectoryInfo(parentPath ?? settings["fs-root"]);
+        DirectoryInfo parent = new DirectoryInfo(parentPath ?? settings["fs-root"]);
 
-        if (!di.Exists)
+        if (!parent.Exists)
         {
             return new Node[0];
         }
 
-        return di
+        return parent
             .GetDirectories("*", SearchOption.TopDirectoryOnly)
-            .Select(d => new Node(d.FullName));
+            .Select(child => new Node(child));
     }
 }
