@@ -1,0 +1,9 @@
+query Children($parentPath: String)
+{
+  children(parentPath: $parentPath) {
+    name
+    path
+    isParent
+    dateOfReceiving
+  }
+}

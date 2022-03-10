@@ -7,7 +7,7 @@ public class Query
         /*
         query Children($parentPath: String!)
         {
-            children(rootPath: $parentPath) {
+            children(parentPath: $parentPath) {
                 ...
             }
         }

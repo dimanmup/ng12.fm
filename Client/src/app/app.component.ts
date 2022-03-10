@@ -1,13 +1,18 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component } from '@angular/core';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
+import { ChildrenGQL, ChildrenQuery, Exact, Maybe } from 'src/generated/graphql';
+import { QueryRef } from 'apollo-angular';
+import { Subscription } from 'rxjs';
 
 class Node {
   constructor(
     public id: number, 
     public name: string,
+    public path: string,
+    public dateOfReceiving: Date,
     public isParent: boolean = false,
-    public children?: Node[]
+    public children?: Node[],
   ) { }
 }
 
@@ -18,40 +23,47 @@ class Node {
 })
 export class AppComponent {
   title: string = '';
-  id: number = 1;
+
+  // Data after event
   tree: Node[] = [];
+
+  // Level context
+  nextId: number = 1;
+  selectedId: number = 0;
+  children: Node[] = [];
+
+  // Material
   treeControl = new NestedTreeControl<Node>(node => node.children);
   dataSource = new MatTreeNestedDataSource<Node>();
 
-  constructor() {
-    this.tree = [
-      new Node(this.nextId(), '1', true, [
-        new Node(this.nextId(), '1.1'),
-        new Node(this.nextId(), '1.2'),
-        new Node(this.nextId(), '1.3', true, [
-          new Node(this.nextId(), '1.3.1'),
-          new Node(this.nextId(), '1.3.2')
-        ])
-      ]),
-      new Node(this.nextId(), '2'),
-      new Node(this.nextId(), '3', true)
-    ];
+  // GQL
+  childrenSubscription: Subscription | undefined = undefined;
+  childrenRef : QueryRef<ChildrenQuery, Exact<{
+    parentPath?: Maybe<string> | undefined;
+  }>> | undefined = undefined;
 
-    this.dataSource.data = this.tree;
+  constructor(private childrenGQL: ChildrenGQL) {
+    this.childrenRef = this.childrenGQL
+      .watch({ }, {fetchPolicy: 'network-only'});
+
+    this.childrenSubscription = this.childrenRef.valueChanges
+      .subscribe(result => {
+        this.children = result.data.children.map(c => new Node(this.genNextId(), c.name, c.path, c.dateOfReceiving, c.isParent));
+        this.add(this.selectedId, this.children);
+        this.refresh();
+      });
   }
+  
+  genNextId = (): number => this.nextId++;
 
-  nextId = (): number => this.id++;
-  
   hasChild = (_: number, node: Node) => node.isParent;
-  
-  get = (id: number): Node | undefined => this.find(this.tree, id);
-  
-  refreshTree(): void {
+
+  refresh() {
     this.dataSource.data = [];
     this.dataSource.data = this.tree;
   }
 
-  find(nodes: Node[] | undefined, id: number): Node | undefined {
+  findBranchByBranch(nodes: Node[] | undefined, id: number): Node | undefined {
     if(!nodes)
       return undefined;
     
@@ -69,35 +81,37 @@ export class AppComponent {
     return undefined;
   }
 
-  add(parentId: number, newChild: Node): void {
+  get = (id: number): Node | undefined => this.findBranchByBranch(this.tree, id);
+  
+  add(parentId: number, children: Node[]): void {
+
+    if (parentId === 0) {
+      this.tree = children;
+      return;
+    }
+
     const node: Node | undefined = this.get(parentId);
 
     if (!node)
       return;
     
-    if (node.children)
-      node.children.push(newChild);
-    else
-      node.children = [newChild];
-    
-    this.refreshTree();
+    node.children = children;
   }
 
-  clear(id: number): void {
-    const node: Node | undefined = this.get(id);
+  clear(parentId: number) {
+    const node: Node | undefined = this.get(parentId);
 
-    if (!node)
-      return;
-
-    node.children = undefined;
-
-    this.dataSource.data = [];
-    this.dataSource.data = this.tree;
+    if (node) {
+      node.children = undefined;
+      this.refresh();
+    }
   }
 
   toggle(node: Node): void {
+    this.selectedId = node.id;
+    
     if (this.treeControl.isExpanded(node))
-      this.add(node.id, new Node(this.nextId(), 'child of ' + node.id));
+      this.childrenRef?.refetch({parentPath: node.path});
     else
       this.clear(node.id);
   }
