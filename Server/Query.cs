@@ -2,9 +2,18 @@ namespace Server;
 
 public class Query
 {
-    public IEnumerable<Node> Children([Service]Dictionary<string, string> settings)
+    public IEnumerable<Node> Children([Service]Dictionary<string, string> settings, string? parentPath)
     {
-        DirectoryInfo di = new DirectoryInfo(settings["fs-root"]);
+        /*
+        query Children($parentPath: String!)
+        {
+            children(rootPath: $parentPath) {
+                ...
+            }
+        }
+        */
+        
+        DirectoryInfo di = new DirectoryInfo(parentPath ?? settings["fs-root"]);
 
         if (!di.Exists)
         {
