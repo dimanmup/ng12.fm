@@ -1,19 +1,41 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component } from '@angular/core';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-import { DirectoriesGQL, DirectoriesQuery, Exact, Maybe } from 'src/generated/graphql';
+import { DirectoriesGQL, DirectoriesQuery, Exact, FilesGQL, FilesQuery, Maybe } from 'src/generated/graphql';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 
 class Node {
   constructor(
+    public name: string,
+    public path: string,
+    public dateOfReceiving: Date // To work refetch() after clicking the glyph again.
+  ) { }
+}
+
+class DirectoryNode extends Node {
+  constructor(
     public id: number, 
     public name: string,
     public path: string,
-    public dateOfReceiving: Date, // To work refetch() after clicking the glyph again.
+    public dateOfReceiving: Date,
     public isParent: boolean = false,
-    public children?: Node[],
-  ) { }
+    public children?: DirectoryNode[]) {
+      super(name, path, dateOfReceiving);
+  }
+}
+
+class FileNode extends Node {
+  constructor(
+    public name: string,
+    public path: string,
+    public dateOfReceiving: Date,
+    public dateOfCreation: Date,
+    public dateOfLastAccess: Date,
+    public dateOfLastWrite: Date,
+    public size: number) {
+      super(name, path, dateOfReceiving);
+  }
 }
 
 @Component({
@@ -25,31 +47,39 @@ export class AppComponent {
   title: string = '';
 
   // Data after event
-  tree: Node[] = [];
+  tree: DirectoryNode[] = [];
 
   // Level context
   nextId: number = 1;
   toggledId: number = 0;
   selectedId: number = 0;
-  directories: Node[] = [];
+  directories: DirectoryNode[] = [];
+  files: FileNode[] = [];
 
   // Material
-  treeControl = new NestedTreeControl<Node>(node => node.children);
-  dataSource = new MatTreeNestedDataSource<Node>();
+  treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
+  dataSource = new MatTreeNestedDataSource<DirectoryNode>();
 
   // GQL
-  directoriesSubscription: Subscription | undefined = undefined;
-  directoriesRef : QueryRef<DirectoriesQuery, Exact<{
+  directoriesSubscription: Subscription;
+  directoriesRef: QueryRef<DirectoriesQuery, Exact<{
     parentPath?: Maybe<string> | undefined;
-  }>> | undefined = undefined;
+  }>>;
+  filesSubscription: Subscription;
+  filesRef: QueryRef<FilesQuery, Exact<{
+    parentPath?: Maybe<string> | undefined;
+  }>>;
 
-  constructor(private directoriesGQL: DirectoriesGQL) {
+  constructor(
+      private directoriesGQL: DirectoriesGQL,
+      private filesGQL: FilesGQL
+    ) {
     this.directoriesRef = this.directoriesGQL
       .watch({ }, {fetchPolicy: 'network-only'});
 
     this.directoriesSubscription = this.directoriesRef.valueChanges
       .subscribe(result => {
-        this.directories = result.data.directories.map(c => new Node(this.genNextId(), 
+        this.directories = result.data.directories.map(c => new DirectoryNode(this.genNextId(), 
           c.name, 
           c.path, 
           c.dateOfReceiving, 
@@ -58,23 +88,40 @@ export class AppComponent {
         this.add(this.toggledId, this.directories);
         this.refresh();
       });
+
+    this.filesRef = this.filesGQL
+      .watch({ }, {fetchPolicy: 'network-only'});
+
+    this.filesSubscription = this.filesRef.valueChanges
+      .subscribe(result => {
+        this.files = result.data.files.map(f => new FileNode(
+          f.name,
+          f.path,
+          f.dateOfReceiving,
+          f.dateOfCreation,
+          f.dateOfLastAccess,
+          f.dateOfLastWrite,
+          f.size
+        ));
+        console.log(this.files);
+      });
   }
   
   genNextId = (): number => this.nextId++;
 
-  hasChild = (_: number, node: Node) => node.isParent;
+  hasChild = (_: number, node: DirectoryNode) => node.isParent;
 
   refresh() {
     this.dataSource.data = [];
     this.dataSource.data = this.tree;
   }
 
-  findBranchByBranch(nodes: Node[] | undefined, id: number): Node | undefined {
+  findBranchByBranch(nodes: DirectoryNode[] | undefined, id: number): DirectoryNode | undefined {
     if(!nodes)
       return undefined;
     
-    let stack: Node[] = Array.from(nodes);
-    let found: Node;
+    let stack: DirectoryNode[] = Array.from(nodes);
+    let found: DirectoryNode;
 
     while (stack) {
       found = stack.pop()!;
@@ -87,16 +134,16 @@ export class AppComponent {
     return undefined;
   }
 
-  get = (id: number): Node | undefined => this.findBranchByBranch(this.tree, id);
+  get = (id: number): DirectoryNode | undefined => this.findBranchByBranch(this.tree, id);
   
-  add(parentId: number, children: Node[]): void {
+  add(parentId: number, children: DirectoryNode[]): void {
 
     if (parentId === 0) {
       this.tree = children;
       return;
     }
 
-    const node: Node | undefined = this.get(parentId);
+    const node: DirectoryNode | undefined = this.get(parentId);
 
     if (!node)
       return;
@@ -105,7 +152,7 @@ export class AppComponent {
   }
 
   clear(parentId: number) {
-    const node: Node | undefined = this.get(parentId);
+    const node: DirectoryNode | undefined = this.get(parentId);
 
     if (node) {
       node.children = undefined;
@@ -113,7 +160,7 @@ export class AppComponent {
     }
   }
 
-  toggle(node: Node): void {
+  toggle(node: DirectoryNode): void {
     this.toggledId = node.id;
     
     if (this.treeControl.isExpanded(node))
@@ -122,8 +169,9 @@ export class AppComponent {
       this.clear(node.id);
   }
 
-  select(node: Node): void {
+  select(node: DirectoryNode): void {
     this.selectedId = node.id;
+    this.filesRef?.refetch({parentPath: node.path});
   }
 
 }

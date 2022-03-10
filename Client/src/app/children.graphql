@@ -1,9 +1,0 @@
-query Directories($parentPath: String)
-{
-  directories(parentPath: $parentPath) {
-    name
-    path
-    isParent
-    dateOfReceiving
-  }
-}

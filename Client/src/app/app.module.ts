@@ -10,6 +10,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { GraphQLModule } from './graphql.module';
 import { HttpClientModule } from '@angular/common/http';
 
+// Splitter
+import { AngularSplitModule } from 'angular-split';
+
 @NgModule({
   declarations: [
     AppComponent
@@ -22,7 +25,10 @@ import { HttpClientModule } from '@angular/common/http';
     MatTreeModule,
     MatIconModule,
     GraphQLModule,
-    HttpClientModule
+    HttpClientModule,
+
+    // Splitter
+    AngularSplitModule
   ],
   providers: [],
   bootstrap: [AppComponent]

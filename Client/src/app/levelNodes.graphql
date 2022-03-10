@@ -1,0 +1,21 @@
+query Directories($parentPath: String)
+{
+  directories(parentPath: $parentPath) {
+    name
+    path
+    isParent
+    dateOfReceiving
+  }
+}
+query Files($parentPath: String)
+{
+  files(parentPath: $parentPath) {
+    name
+    path
+    dateOfReceiving
+    dateOfCreation
+    dateOfLastAccess
+    dateOfLastWrite
+    size
+  }
+}
