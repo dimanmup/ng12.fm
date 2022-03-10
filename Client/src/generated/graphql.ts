@@ -17,10 +17,9 @@ export type Scalars = {
   DateTime: any;
 };
 
-export type Node = {
-  __typename?: 'Node';
+export type DirectoryNode = {
+  __typename?: 'DirectoryNode';
   dateOfReceiving: Scalars['DateTime'];
-  error?: Maybe<Scalars['String']>;
   isParent: Scalars['Boolean'];
   name: Scalars['String'];
   path: Scalars['String'];
@@ -28,24 +27,24 @@ export type Node = {
 
 export type Query = {
   __typename?: 'Query';
-  children: Array<Node>;
+  directories: Array<DirectoryNode>;
 };
 
 
-export type QueryChildrenArgs = {
+export type QueryDirectoriesArgs = {
   parentPath?: InputMaybe<Scalars['String']>;
 };
 
-export type ChildrenQueryVariables = Exact<{
+export type DirectoriesQueryVariables = Exact<{
   parentPath?: Maybe<Scalars['String']>;
 }>;
 
 
-export type ChildrenQuery = { __typename?: 'Query', children: Array<{ __typename?: 'Node', name: string, path: string, isParent: boolean, dateOfReceiving: any }> };
+export type DirectoriesQuery = { __typename?: 'Query', directories: Array<{ __typename?: 'DirectoryNode', name: string, path: string, isParent: boolean, dateOfReceiving: any }> };
 
-export const ChildrenDocument = gql`
-    query Children($parentPath: String) {
-  children(parentPath: $parentPath) {
+export const DirectoriesDocument = gql`
+    query Directories($parentPath: String) {
+  directories(parentPath: $parentPath) {
     name
     path
     isParent
@@ -57,8 +56,8 @@ export const ChildrenDocument = gql`
   @Injectable({
     providedIn: 'root'
   })
-  export class ChildrenGQL extends Apollo.Query<ChildrenQuery, ChildrenQueryVariables> {
-    document = ChildrenDocument;
+  export class DirectoriesGQL extends Apollo.Query<DirectoriesQuery, DirectoriesQueryVariables> {
+    document = DirectoriesDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

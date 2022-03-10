@@ -1,6 +1,6 @@
-query Children($parentPath: String)
+query Directories($parentPath: String)
 {
-  children(parentPath: $parentPath) {
+  directories(parentPath: $parentPath) {
     name
     path
     isParent

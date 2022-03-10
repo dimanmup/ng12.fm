@@ -1,13 +1,13 @@
 namespace Server;
 
-public class Node
+public class DirectoryNode
 {
     public string Name { get; }
     public string Path { get; }
     public bool IsParent { get; }
     public DateTime DateOfReceiving { get; }
 
-    public Node(DirectoryInfo parent)
+    public DirectoryNode(DirectoryInfo parent)
     {
         Path = parent.FullName;
         Name = System.IO.Path.GetFileName(parent.FullName) ?? "null";

@@ -1,7 +1,7 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { Component } from '@angular/core';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-import { ChildrenGQL, ChildrenQuery, Exact, Maybe } from 'src/generated/graphql';
+import { DirectoriesGQL, DirectoriesQuery, Exact, Maybe } from 'src/generated/graphql';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 
@@ -31,31 +31,31 @@ export class AppComponent {
   nextId: number = 1;
   toggledId: number = 0;
   selectedId: number = 0;
-  children: Node[] = [];
+  directories: Node[] = [];
 
   // Material
   treeControl = new NestedTreeControl<Node>(node => node.children);
   dataSource = new MatTreeNestedDataSource<Node>();
 
   // GQL
-  childrenSubscription: Subscription | undefined = undefined;
-  childrenRef : QueryRef<ChildrenQuery, Exact<{
+  directoriesSubscription: Subscription | undefined = undefined;
+  directoriesRef : QueryRef<DirectoriesQuery, Exact<{
     parentPath?: Maybe<string> | undefined;
   }>> | undefined = undefined;
 
-  constructor(private childrenGQL: ChildrenGQL) {
-    this.childrenRef = this.childrenGQL
+  constructor(private directoriesGQL: DirectoriesGQL) {
+    this.directoriesRef = this.directoriesGQL
       .watch({ }, {fetchPolicy: 'network-only'});
 
-    this.childrenSubscription = this.childrenRef.valueChanges
+    this.directoriesSubscription = this.directoriesRef.valueChanges
       .subscribe(result => {
-        this.children = result.data.children.map(c => new Node(this.genNextId(), 
+        this.directories = result.data.directories.map(c => new Node(this.genNextId(), 
           c.name, 
           c.path, 
           c.dateOfReceiving, 
           c.isParent));
 
-        this.add(this.toggledId, this.children);
+        this.add(this.toggledId, this.directories);
         this.refresh();
       });
   }
@@ -117,7 +117,7 @@ export class AppComponent {
     this.toggledId = node.id;
     
     if (this.treeControl.isExpanded(node))
-      this.childrenRef?.refetch({parentPath: node.path});
+      this.directoriesRef?.refetch({parentPath: node.path});
     else
       this.clear(node.id);
   }

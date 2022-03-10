@@ -2,12 +2,12 @@ namespace Server;
 
 public class Query
 {
-    public IEnumerable<Node> Children([Service]Dictionary<string, string> settings, string? parentPath)
+    public IEnumerable<DirectoryNode> GetDirectories([Service]Dictionary<string, string> settings, string? parentPath)
     {
         /*
-        query Children($parentPath: String!)
+        query Directories($parentPath: String!)
         {
-            children(parentPath: $parentPath) {
+            getDirectories(parentPath: $parentPath) {
                 ...
             }
         }
@@ -17,11 +17,11 @@ public class Query
 
         if (!parent.Exists)
         {
-            return new Node[0];
+            return new DirectoryNode[0];
         }
 
         return parent
             .GetDirectories("*", SearchOption.TopDirectoryOnly)
-            .Select(child => new Node(child));
+            .Select(child => new DirectoryNode(child));
     }
 }
