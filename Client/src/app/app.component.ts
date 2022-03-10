@@ -10,7 +10,7 @@ class Node {
     public id: number, 
     public name: string,
     public path: string,
-    public dateOfReceiving: Date,
+    public dateOfReceiving: Date, // To work refetch() after clicking the glyph again.
     public isParent: boolean = false,
     public children?: Node[],
   ) { }
