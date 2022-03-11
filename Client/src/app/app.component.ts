@@ -112,7 +112,7 @@ export class AppComponent {
   
   genNextId = (): number => this.nextId++;
 
-  hasChild = (_: number, node: DirectoryNode) => node.isParent;
+  isParent = (_: number, node: DirectoryNode) => node.isParent;
 
   refresh() {
     this.dataSource.data = [];

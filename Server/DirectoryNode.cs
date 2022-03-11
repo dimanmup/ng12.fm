@@ -3,6 +3,7 @@ namespace Server;
 public class DirectoryNode : INode
 {
     private readonly DirectoryInfo parent;
+    
     public DirectoryNode(DirectoryInfo parent)
     {
         this.parent = parent;
