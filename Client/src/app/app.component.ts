@@ -71,7 +71,8 @@ export class AppComponent {
   }>>;
 
   // Table
-  displayedColumns: string[] = ['name', 'size'];
+  columnNames: string[] = ['name', 'size'];
+  expandedRow?: FileNode;
 
   constructor(
       private directoriesGQL: DirectoriesGQL,
