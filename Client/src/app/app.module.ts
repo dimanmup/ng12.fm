@@ -12,10 +12,12 @@ import { MatTableModule } from '@angular/material/table';
 
 // Splitter
 import { AngularSplitModule } from 'angular-split';
+import { SizeFormat } from './pipes/size';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    SizeFormat
   ],
   imports: [
     BrowserModule,
