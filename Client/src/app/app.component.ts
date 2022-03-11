@@ -38,7 +38,7 @@ class FileNode extends Node {
     public sizeFormat: SizeFormat) {
       super(name, path, dateOfReceiving);
   }
-  get sizeView(): any {
+  get sizeView(): string {
     return this.sizeFormat.transform(this.size, 1000000);
   }
 }
