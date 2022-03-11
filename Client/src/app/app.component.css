@@ -93,11 +93,9 @@
     width: 100%;
     height: 0;
     overflow: hidden;
-    transition: height 0.3s;
 }
 #fm #viewer tr.detail.expanded .file-extra {
-    height: 100px;
-    transition: height 0.3s;
+    height: unset;
 }
 #fm #viewer tr.detail .file-extra .info {
     font-size: 9pt;

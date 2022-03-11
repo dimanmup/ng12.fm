@@ -4,6 +4,7 @@ import { MatTreeNestedDataSource } from '@angular/material/tree';
 import { DirectoriesGQL, DirectoriesQuery, Exact, FilesGQL, FilesQuery, Maybe } from 'src/generated/graphql';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
+import { SizeFormat } from './pipes/size';
 
 class Node {
   constructor(
@@ -33,9 +34,17 @@ class FileNode extends Node {
     public dateOfCreation: Date,
     public dateOfLastAccess: Date,
     public dateOfLastWrite: Date,
-    public size: number) {
+    public size: number,
+    public sizeFormat: SizeFormat) {
       super(name, path, dateOfReceiving);
   }
+  get sizeView(): any {
+    return this.sizeFormat.transform(this.size, 1000000);
+  }
+}
+
+class HeaderItem {
+  constructor(public id: string, public name: string) { }
 }
 
 @Component({
@@ -71,12 +80,19 @@ export class AppComponent {
   }>>;
 
   // Table
-  columnNames: string[] = ['name', 'size'];
   expandedRow?: FileNode;
+  header: HeaderItem[] = [
+    new HeaderItem('name', 'Name'),
+    new HeaderItem('sizeView', 'Size (MB)')
+  ];
+  get fileNodeKeys(): string[] {
+    return this.header.map(h => h.id);
+  }
 
   constructor(
       private directoriesGQL: DirectoriesGQL,
-      private filesGQL: FilesGQL
+      private filesGQL: FilesGQL,
+      private sizeFormat: SizeFormat
     ) {
     this.directoriesRef = this.directoriesGQL
       .watch({ }, {fetchPolicy: 'network-only'});
@@ -105,7 +121,8 @@ export class AppComponent {
           f.dateOfCreation,
           f.dateOfLastAccess,
           f.dateOfLastWrite,
-          f.size
+          f.size,
+          this.sizeFormat
         ));
       });
   }

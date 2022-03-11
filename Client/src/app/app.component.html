@@ -29,24 +29,19 @@
     <as-split-area [size]="70">
       <div id="viewer" class="panel right">
         <table mat-table [dataSource]="files" multiTemplateDataRows>
-          <!-- General -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let file">{{file.name}}</td>
+          <ng-container [matColumnDef]="h.id" *ngFor="let h of header">
+            <th mat-header-cell *matHeaderCellDef>{{h.name}}</th>
+            <td mat-cell *matCellDef="let file">{{file[h.id]}}</td>
           </ng-container>
-          <ng-container matColumnDef="size">
-            <th mat-header-cell *matHeaderCellDef>Size (MB)</th>
-            <td mat-cell *matCellDef="let file">{{file.size | sizeFormat: 1000000 }}</td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columnNames; sticky: true"></tr>
-          <tr mat-row *matRowDef="let row; columns: columnNames;"
+          <tr mat-header-row *matHeaderRowDef="fileNodeKeys; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: fileNodeKeys;"
               (click)="expandedRow = expandedRow === row ? undefined : row"
               class="general"
               [class.selected]="expandedRow === row">
           </tr>
           <!-- Detail -->
           <ng-container matColumnDef="path">
-            <td mat-cell *matCellDef="let file" [attr.colspan]="columnNames.length">
+            <td mat-cell *matCellDef="let file" [attr.colspan]="fileNodeKeys.length">
               <div class="file-extra">
                 <div class="info">
                   <span><b>path:&nbsp;</b></span>

@@ -33,7 +33,7 @@ import { SizeFormat } from './pipes/size';
     // Splitter
     AngularSplitModule
   ],
-  providers: [],
+  providers: [SizeFormat],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
