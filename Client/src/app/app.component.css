@@ -7,19 +7,12 @@
     height: 500px;
 }
 #fm .panel {
-    padding: 15px;
-    height: calc(100% - 30px);
-    overflow: auto;
-}
-#fm .panel.left {
-    border-radius: 5px 0 0 5px;
-}
-#fm .panel.right {
-    border-radius: 0 5px 5px 0;
+    height: 100%;
 }
 #fm #tree {
-    padding-left: 35px;
+    padding: 15px 15px 15px 35px;
     background-color: beige;
+    overflow: auto;
 }
 #fm #tree ul,
 #fm #tree li {
@@ -57,6 +50,28 @@
 #fm #tree .mat-tree-node .node-info.selected {
     color: orangered;
 }
-#fm #viewer {
-    background-color: aliceblue;
+#fm #viewer,
+#fm #viewer table {
+    background-color: antiquewhite;
+}
+#fm #viewer table {
+    width: 100%;
+}
+#fm #viewer th,
+#fm #viewer td {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+#fm #viewer th {
+    padding-top: 15px;
+}
+#fm #viewer td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+#fm #viewer thead {
+    z-index: 1;
+    position: sticky;
+    top: 0;
+    background-color: antiquewhite;
 }

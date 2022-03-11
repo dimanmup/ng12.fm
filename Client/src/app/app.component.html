@@ -33,15 +33,19 @@
     <as-split-area [size]="70">
       
       <div id="viewer" class="panel right">
-        <table cellpadding="5">
-          <tr>
-            <th>Name</th>
-            <th>Size (bytes)</th>
-          </tr>
-          <tr *ngFor="let hero of files">
-            <td>{{hero.name}}</td>
-            <td>{{hero.size}}</td>
-          </tr>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let file of files">
+              <td>{{file.name}}</td>
+              <td>{{file.size}}</td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
