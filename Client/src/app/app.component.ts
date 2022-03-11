@@ -70,6 +70,9 @@ export class AppComponent {
     parentPath?: Maybe<string> | undefined;
   }>>;
 
+  // Table
+  displayedColumns: string[] = ['name', 'size'];
+
   constructor(
       private directoriesGQL: DirectoriesGQL,
       private filesGQL: FilesGQL
@@ -103,7 +106,6 @@ export class AppComponent {
           f.dateOfLastWrite,
           f.size
         ));
-        console.log(this.files);
       });
   }
   

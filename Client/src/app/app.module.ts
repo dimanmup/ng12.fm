@@ -1,14 +1,14 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserModule } from '@angular/platform-browser';
+import { GraphQLModule } from './graphql.module';
+import { HttpClientModule } from '@angular/common/http';
+import { NgModule } from '@angular/core';
 
 // Material:
 import { MatTreeModule } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
-import { GraphQLModule } from './graphql.module';
-import { HttpClientModule } from '@angular/common/http';
+import { MatTableModule } from '@angular/material/table';
 
 // Splitter
 import { AngularSplitModule } from 'angular-split';
@@ -20,12 +20,13 @@ import { AngularSplitModule } from 'angular-split';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    GraphQLModule,
+    HttpClientModule,
 
     // Material:
     MatTreeModule,
     MatIconModule,
-    GraphQLModule,
-    HttpClientModule,
+    MatTableModule,
 
     // Splitter
     AngularSplitModule

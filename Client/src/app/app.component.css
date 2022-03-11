@@ -60,19 +60,8 @@
 }
 #fm #viewer th,
 #fm #viewer td {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 15px;
 }
 #fm #viewer th {
-    padding-top: 15px;
-}
-#fm #viewer td {
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-#fm #viewer thead {
-    z-index: 1;
-    position: sticky;
-    top: 0;
-    background-color: antiquewhite;
+    font-size: inherit;
 }
