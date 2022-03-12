@@ -9,7 +9,7 @@ import { DatePipe } from '@angular/common';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Title } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 //#region Entities
@@ -36,6 +36,7 @@ class DirectoryNode extends Node {
 
 class FileNode extends Node {
   constructor(
+    public parentId: number,
     public name: string,
     public path: string,
     public dateOfReceiving: Date,
@@ -152,6 +153,7 @@ export class AppComponent {
       this.filesSubscription = this.filesRef.valueChanges
         .subscribe(result => {
           this.files.data = result.data.files.map(f => new FileNode(
+            this.selectedId,
             f.name,
             f.path,
             f.dateOfReceiving,
@@ -247,8 +249,23 @@ export class AppComponent {
   //#endregion
 
   //#region actions
-  download(path: string) {
+  downloadFile(path: string) {
     location.href = environment.uriRoot + 'api/download?path=' + path;
+  }
+
+  deleteFile(parentId: number, path: string) {
+    if (confirm('Are you shure?')) {
+      this.http.get(environment.uriRoot + 'api/delete?path=' + path, {responseType: 'text'})
+        .subscribe(result => {
+          // TODO: Material banner
+          if (parentId === 0)
+            this.filesRef?.refetch();
+          else
+            this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+        }, (error: HttpErrorResponse) => {
+          // TODO: Material banner
+        });
+    }
   }
   //#endregion
 }

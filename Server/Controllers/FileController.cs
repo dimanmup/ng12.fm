@@ -63,4 +63,24 @@ public class FileController: ControllerBase
             await Response.WriteAsync(e.Message);
         }
     }
+    
+    [Route("/api/delete")]
+    public ObjectResult Delete(string path)
+    {
+        if (IOFile.Exists(path))
+        {
+            try
+            {
+                IOFile.Delete(path);
+            }
+            catch (Exception e)
+            {
+                return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
+            }
+
+            return new OkObjectResult("The file has been deleted.");
+        }
+
+        return new ObjectResult("File not found.") { StatusCode = (int)HttpStatusCode.BadRequest };
+    }
 }
