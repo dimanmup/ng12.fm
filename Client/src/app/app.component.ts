@@ -11,6 +11,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Title } from '@angular/platform-browser';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 
 //#region Entities
 class Node {
@@ -129,7 +130,8 @@ export class AppComponent {
     private filesGQL: FilesGQL,
     private sizeFormat: SizePipe,
     private datePipe: DatePipe,
-    private http: HttpClient) {
+    private http: HttpClient,
+    private snackBar: MatSnackBar) {
       titleService.setTitle(this.title);
     
       this.directoriesRef = this.directoriesGQL
@@ -250,6 +252,7 @@ export class AppComponent {
 
   //#region actions
   downloadFile(path: string) {
+    //window.open(environment.uriRoot + 'api/download?path=' + path, '_blank');
     location.href = environment.uriRoot + 'api/download?path=' + path;
   }
 
@@ -257,15 +260,23 @@ export class AppComponent {
     if (confirm('Are you shure?')) {
       this.http.get(environment.uriRoot + 'api/delete?path=' + path, {responseType: 'text'})
         .subscribe(result => {
-          // TODO: Material banner
+          console.log(result);
           if (parentId === 0)
             this.filesRef?.refetch();
           else
             this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
-        }, (error: HttpErrorResponse) => {
-          // TODO: Material banner
+        }, (httpErrorResponse: HttpErrorResponse) => {
+          console.error(httpErrorResponse);
+          this.openSnackBar(httpErrorResponse.error, 'error');
         });
     }
+  }
+
+  openSnackBar(message: string, cssClass: string) {
+    const config: MatSnackBarConfig = new MatSnackBarConfig();
+    config.verticalPosition = 'top';
+    config.panelClass = cssClass;
+    this.snackBar.open(message, 'Ok', config);
   }
   //#endregion
 }

@@ -129,3 +129,6 @@
     margin: 5px 15px;
 }
 /* #endregion */
+::ng-deep snack-bar-container.error {
+    background-color: firebrick;
+}
