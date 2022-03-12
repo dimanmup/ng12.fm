@@ -1,11 +1,14 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
 import { DirectoriesGQL, DirectoriesQuery, Exact, FilesGQL, FilesQuery, Maybe } from 'src/generated/graphql';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
 import { SizePipe } from './pipes/size';
 import { DatePipe } from '@angular/common';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { Title } from '@angular/platform-browser';
 
 //#region Entities
 class Node {
@@ -13,7 +16,7 @@ class Node {
   constructor(
     public name: string,
     public path: string,
-    public dateOfReceiving: Date, // To work refetch() after clicking the glyph again.
+    public dateOfReceiving: Date // To work refetch() after clicking the glyph again.
     ) { }
 }
 
@@ -38,12 +41,12 @@ class FileNode extends Node {
     public dateOfLastAccess: Date,
     public dateOfLastWrite: Date,
     public size: number,
-    public sizeFormat: SizePipe,
+    public sizePipe: SizePipe,
     public datePipe: DatePipe) {
       super(name, path, dateOfReceiving);
   }
   get sizeView(): string {
-    return this.sizeFormat.transform(this.size, 1000000);
+    return this.sizePipe.transform(this.size, 1000000);
   }
   get dateOfReceivingView(): string | null {
     return this.datePipe.transform(this.dateOfReceiving, this.dateFormat);
@@ -73,20 +76,21 @@ class HeaderItem {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title: string = '';
-
-  tree: DirectoryNode[] = [];
-
-  // Level context
-  nextId: number = 1;
-  toggledId: number = 0;
-  selectedId: number = 0;
-  directories: DirectoryNode[] = [];
-  files: FileNode[] = [];
+  readonly title: string = 'ng12.fm';
 
   // Material
   treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
   dataSource = new MatTreeNestedDataSource<DirectoryNode>();
+
+  // Tree
+  tree: DirectoryNode[] = [];
+  nextId: number = 1;
+  toggledId: number = 0;
+  selectedId: number = 0;
+
+  // Level context
+  directories: DirectoryNode[] = [];
+  files: MatTableDataSource<FileNode> = new MatTableDataSource<FileNode>([]);
 
   // GQL
   directoriesSubscription: Subscription;
@@ -99,8 +103,7 @@ export class AppComponent {
   }>>;
 
   // Table
-  expandedRow?: FileNode;
-  header: HeaderItem[] = [
+  readonly header: HeaderItem[] = [
     new HeaderItem('name', 'Name', true),
     new HeaderItem('sizeView', 'Size (MB)', true),
     new HeaderItem('dateOfReceivingView', 'Date of Receiving', false),
@@ -114,52 +117,60 @@ export class AppComponent {
   get headerVisibleIds(): string[] {
     return this.headerVisible.map(h => h.id);
   }
-
-  constructor(
-      private directoriesGQL: DirectoriesGQL,
-      private filesGQL: FilesGQL,
-      private sizeFormat: SizePipe,
-      private datePipe: DatePipe
-    ) {
-    this.directoriesRef = this.directoriesGQL
-      .watch({ }, {fetchPolicy: 'network-only'});
-
-    this.directoriesSubscription = this.directoriesRef.valueChanges
-      .subscribe(result => {
-        this.directories = result.data.directories.map(c => new DirectoryNode(this.genNextId(), 
-          c.name, 
-          c.path, 
-          c.dateOfReceiving, 
-          c.isParent));
-
-        this.addTreeNodeChildren(this.toggledId, this.directories);
-        this.refreshTree();
-      });
-
-    this.filesRef = this.filesGQL
-      .watch({ }, {fetchPolicy: 'network-only'});
-
-    this.filesSubscription = this.filesRef.valueChanges
-      .subscribe(result => {
-        this.files = result.data.files.map(f => new FileNode(
-          f.name,
-          f.path,
-          f.dateOfReceiving,
-          f.dateOfCreation,
-          f.dateOfLastAccess,
-          f.dateOfLastWrite,
-          f.size,
-          this.sizeFormat,
-          this.datePipe
-        ));
-      });
-  }
+  @ViewChild(MatSort) sort: MatSort = new MatSort();
+  expandedRow?: FileNode;
   
+  constructor(
+    titleService: Title,
+    private directoriesGQL: DirectoriesGQL,
+    private filesGQL: FilesGQL,
+    private sizeFormat: SizePipe,
+    private datePipe: DatePipe) {
+      titleService.setTitle(this.title);
+    
+      this.directoriesRef = this.directoriesGQL
+        .watch({ }, {fetchPolicy: 'network-only'});
+
+      this.directoriesSubscription = this.directoriesRef.valueChanges
+        .subscribe(result => {
+          this.directories = result.data.directories.map(c => new DirectoryNode(this.genNextId(), 
+            c.name, 
+            c.path, 
+            c.dateOfReceiving, 
+            c.isParent));
+
+          this.addTreeNodeChildren(this.toggledId, this.directories);
+          this.refreshTree();
+        });
+
+      this.filesRef = this.filesGQL
+        .watch({ }, {fetchPolicy: 'network-only'});
+
+      this.filesSubscription = this.filesRef.valueChanges
+        .subscribe(result => {
+          this.files.data = result.data.files.map(f => new FileNode(
+            f.name,
+            f.path,
+            f.dateOfReceiving,
+            f.dateOfCreation,
+            f.dateOfLastAccess,
+            f.dateOfLastWrite,
+            f.size,
+            this.sizeFormat,
+            this.datePipe
+          ));
+        });
+  }
+
+  ngAfterViewInit() {
+    this.files.sort = this.sort;
+  }
+
+  //#region Tree
   genNextId = (): number => this.nextId++;
 
   isParent = (_: number, node: DirectoryNode) => node.isParent;
 
-  //#region Tree
   refreshTree() {
     this.dataSource.data = [];
     this.dataSource.data = this.tree;
