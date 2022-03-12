@@ -113,6 +113,9 @@
     font-size: 9pt;
     color: brown;
 }
+#fm #viewer tr.detail .file-extra .info .buttons {
+    margin: 5px 0;
+}
 #fm #viewer ::ng-deep .mat-sort-header-container {
     justify-content: center;
 }

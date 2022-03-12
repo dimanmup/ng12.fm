@@ -9,6 +9,8 @@ import { DatePipe } from '@angular/common';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Title } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 //#region Entities
 class Node {
@@ -125,7 +127,8 @@ export class AppComponent {
     private directoriesGQL: DirectoriesGQL,
     private filesGQL: FilesGQL,
     private sizeFormat: SizePipe,
-    private datePipe: DatePipe) {
+    private datePipe: DatePipe,
+    private http: HttpClient) {
       titleService.setTitle(this.title);
     
       this.directoriesRef = this.directoriesGQL
@@ -240,6 +243,12 @@ export class AppComponent {
     const h: HeaderItem | undefined = this.header.find(h => h.id === columnName);
     if (h)
       h.visible = include;
+  }
+  //#endregion
+
+  //#region actions
+  download(path: string) {
+    location.href = environment.uriRoot + 'api/download?path=' + path;
   }
   //#endregion
 }
