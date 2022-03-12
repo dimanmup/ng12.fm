@@ -1,9 +1,9 @@
 import {Pipe} from '@angular/core';
  
 @Pipe({
-    name: 'sizeFormat'
+    name: 'sizePipe'
 })
-export class SizeFormat {
+export class SizePipe {
     transform(value: number,
         devider: number = 1): string {
             value /= devider;

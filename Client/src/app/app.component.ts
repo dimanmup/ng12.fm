@@ -4,14 +4,17 @@ import { MatTreeNestedDataSource } from '@angular/material/tree';
 import { DirectoriesGQL, DirectoriesQuery, Exact, FilesGQL, FilesQuery, Maybe } from 'src/generated/graphql';
 import { QueryRef } from 'apollo-angular';
 import { Subscription } from 'rxjs';
-import { SizeFormat } from './pipes/size';
+import { SizePipe } from './pipes/size';
+import { DatePipe } from '@angular/common';
 
+//#region Entities
 class Node {
+  public readonly dateFormat: string = 'yyyy.MM.dd HH:mm:ss';
   constructor(
     public name: string,
     public path: string,
-    public dateOfReceiving: Date // To work refetch() after clicking the glyph again.
-  ) { }
+    public dateOfReceiving: Date, // To work refetch() after clicking the glyph again.
+    ) { }
 }
 
 class DirectoryNode extends Node {
@@ -35,17 +38,34 @@ class FileNode extends Node {
     public dateOfLastAccess: Date,
     public dateOfLastWrite: Date,
     public size: number,
-    public sizeFormat: SizeFormat) {
+    public sizeFormat: SizePipe,
+    public datePipe: DatePipe) {
       super(name, path, dateOfReceiving);
   }
   get sizeView(): string {
     return this.sizeFormat.transform(this.size, 1000000);
   }
+  get dateOfReceivingView(): string | null {
+    return this.datePipe.transform(this.dateOfReceiving, this.dateFormat);
+  }
+  get dateOfCreationView(): string | null {
+    return this.datePipe.transform(this.dateOfCreation, this.dateFormat);
+  }
+  get dateOfLastAccessView(): string | null {
+    return this.datePipe.transform(this.dateOfLastAccess, this.dateFormat);
+  }
+  get dateOfLastWriteView(): string | null {
+    return this.datePipe.transform(this.dateOfLastWrite, this.dateFormat);
+  }
 }
 
 class HeaderItem {
-  constructor(public id: string, public name: string) { }
+  constructor(
+    public id: string, 
+    public name: string,
+    public visible: boolean = false) { }
 }
+//#endregion
 
 @Component({
   selector: 'app-root',
@@ -55,7 +75,6 @@ class HeaderItem {
 export class AppComponent {
   title: string = '';
 
-  // Data after event
   tree: DirectoryNode[] = [];
 
   // Level context
@@ -82,17 +101,28 @@ export class AppComponent {
   // Table
   expandedRow?: FileNode;
   header: HeaderItem[] = [
-    new HeaderItem('name', 'Name'),
-    new HeaderItem('sizeView', 'Size (MB)')
+    new HeaderItem('name', 'Name', true),
+    new HeaderItem('sizeView', 'Size (MB)', true),
+    new HeaderItem('dateOfReceivingView', 'Date of Receiving', false),
+    new HeaderItem('dateOfCreationView', 'Date of Creation', false),
+    new HeaderItem('dateOfLastAccessView', 'Date of Last Access', false),
+    new HeaderItem('dateOfLastWriteView', 'Date of Last Write', false)
   ];
-  get fileNodeKeys(): string[] {
-    return this.header.map(h => h.id);
+  get headerVisible(): HeaderItem[] {
+    return this.header.filter(h => h.visible);
   }
+  get headerVisibleIds(): string[] {
+    return this.headerVisible.map(h => h.id);
+  }
+
+  // Columns toggles
+  dateOfCreationColumnIncluded: boolean = false;
 
   constructor(
       private directoriesGQL: DirectoriesGQL,
       private filesGQL: FilesGQL,
-      private sizeFormat: SizeFormat
+      private sizeFormat: SizePipe,
+      private datePipe: DatePipe
     ) {
     this.directoriesRef = this.directoriesGQL
       .watch({ }, {fetchPolicy: 'network-only'});
@@ -105,8 +135,8 @@ export class AppComponent {
           c.dateOfReceiving, 
           c.isParent));
 
-        this.add(this.toggledId, this.directories);
-        this.refresh();
+        this.addTreeNodeChildren(this.toggledId, this.directories);
+        this.refreshTree();
       });
 
     this.filesRef = this.filesGQL
@@ -122,7 +152,8 @@ export class AppComponent {
           f.dateOfLastAccess,
           f.dateOfLastWrite,
           f.size,
-          this.sizeFormat
+          this.sizeFormat,
+          this.datePipe
         ));
       });
   }
@@ -131,7 +162,8 @@ export class AppComponent {
 
   isParent = (_: number, node: DirectoryNode) => node.isParent;
 
-  refresh() {
+  //#region Tree
+  refreshTree() {
     this.dataSource.data = [];
     this.dataSource.data = this.tree;
   }
@@ -154,16 +186,16 @@ export class AppComponent {
     return undefined;
   }
 
-  get = (id: number): DirectoryNode | undefined => this.findBranchByBranch(this.tree, id);
+  getTreeNode = (id: number): DirectoryNode | undefined => this.findBranchByBranch(this.tree, id);
   
-  add(parentId: number, children: DirectoryNode[]): void {
+  addTreeNodeChildren(parentId: number, children: DirectoryNode[]): void {
 
     if (parentId === 0) {
       this.tree = children;
       return;
     }
 
-    const node: DirectoryNode | undefined = this.get(parentId);
+    const node: DirectoryNode | undefined = this.getTreeNode(parentId);
 
     if (!node)
       return;
@@ -171,27 +203,35 @@ export class AppComponent {
     node.children = children;
   }
 
-  clear(parentId: number) {
-    const node: DirectoryNode | undefined = this.get(parentId);
+  clearTreeNode(parentId: number) {
+    const node: DirectoryNode | undefined = this.getTreeNode(parentId);
 
     if (node) {
       node.children = undefined;
-      this.refresh();
+      this.refreshTree();
     }
   }
 
-  toggle(node: DirectoryNode): void {
+  toggleTreeNode(node: DirectoryNode): void {
     this.toggledId = node.id;
     
     if (this.treeControl.isExpanded(node))
       this.directoriesRef?.refetch({parentPath: node.path});
     else
-      this.clear(node.id);
+      this.clearTreeNode(node.id);
   }
 
-  select(node: DirectoryNode): void {
+  selectTreeNode(node: DirectoryNode): void {
     this.selectedId = node.id;
     this.filesRef?.refetch({parentPath: node.path});
   }
+  //#endregion
 
+  //#region Table
+  includeColumn(include: boolean, columnName: string) {
+    const h: HeaderItem | undefined = this.header.find(h => h.id === columnName);
+    if (h)
+      h.visible = include;
+  }
+  //#endregion
 }

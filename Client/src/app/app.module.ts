@@ -14,12 +14,14 @@ import { MatTreeModule } from '@angular/material/tree';
 
 // Splitter
 import { AngularSplitModule } from 'angular-split';
-import { SizeFormat } from './pipes/size';
+
+// Pipes
+import { SizePipe } from './pipes/size';
+import { DatePipe } from '@angular/common';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    SizeFormat
+    AppComponent
   ],
   imports: [
     BrowserModule,
@@ -37,7 +39,10 @@ import { SizeFormat } from './pipes/size';
     // Splitter
     AngularSplitModule
   ],
-  providers: [SizeFormat],
+  providers: [
+    SizePipe,
+    DatePipe
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
