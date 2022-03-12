@@ -23,7 +23,7 @@ builder.Services.AddGraphQLServer()
     .AddQueryType<Server.Query>();
 
 builder.Services.AddSingleton(new Dictionary<string, string> {
-    { "fs-root", builder.Configuration["FileSystemTreeview:Root"] }
+    { "fs-root", builder.Configuration["FileSystemTree:Root"] }
 });
 
 builder.Services.AddControllers();
