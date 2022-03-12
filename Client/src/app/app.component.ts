@@ -257,19 +257,46 @@ export class AppComponent {
   }
 
   deleteFile(parentId: number, path: string) {
-    if (confirm('Are you shure?')) {
-      this.http.get(environment.uriRoot + 'api/delete?path=' + path, {responseType: 'text'})
-        .subscribe(result => {
-          console.log(result);
-          if (parentId === 0)
-            this.filesRef?.refetch();
-          else
-            this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
-        }, (httpErrorResponse: HttpErrorResponse) => {
-          console.error(httpErrorResponse);
-          this.openSnackBar(httpErrorResponse.error, 'error');
-        });
+    if  (!confirm('Are you shure?'))
+      return;
+
+    this.http.get(environment.uriRoot + 'api/delete?path=' + path, {responseType: 'text'})
+      .subscribe(result => {
+        console.log(result);
+        if (parentId === 0)
+          this.filesRef?.refetch();
+        else
+          this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+      }, (httpErrorResponse: HttpErrorResponse) => {
+        console.error(httpErrorResponse);
+        this.openSnackBar(httpErrorResponse.error, 'error');
+      });
+  }
+
+  renameFile(parentId: number, path: string) {
+    let newName: string | null = prompt('New Name');
+    
+    if (!newName || newName.match(/^\s*$/))
+      return;
+    
+    newName = newName.replace(/(^\s*)|(\s*$)/, '');
+    
+    if (!newName.match(/^[\s\.\_\-0-9A-Za-zА-Яа-я]+$/)) {
+      this.openSnackBar('The new name can only contain letters, numbers, internal space, dot, dash, underscore, brackets.', 'error');
+      return;
     }
+    
+    this.http.get(environment.uriRoot + 'api/rename?oldPath=' + path + '&newName=' + newName, {responseType: 'text'})
+      .subscribe(result => {
+        console.log(result);
+        if (parentId === 0)
+          this.filesRef?.refetch();
+        else
+          this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+      }, (httpErrorResponse: HttpErrorResponse) => {
+        console.error(httpErrorResponse);
+        this.openSnackBar(httpErrorResponse.error, 'error');
+      });
   }
 
   openSnackBar(message: string, cssClass: string) {

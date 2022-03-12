@@ -1,35 +1,16 @@
+using System.IO;
 using System.Net;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using IOFile = System.IO.File;
+using IOPath = System.IO.Path;
 
 namespace Server.Controllers;
 
 [ApiController]
 public class FileController: ControllerBase 
 {
-    // [Route("/api/rename")]
-    // [HttpPost]
-    // public ObjectResult Rename(string oldPath, string newPath)
-    // {
-    //     if (!IOFile.Exists(oldPath))
-    //     {
-    //         return new BadRequestObjectResult("File not found.");
-    //     }
-
-    //     try
-    //     {
-    //         IOFile.Move(oldPath, newPath);
-    //     }
-    //     catch (System.Exception e)
-    //     {
-    //         return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
-    //     }
-
-    //     return new OkObjectResult("The file has been renamed.");
-    // }
-
     [Route("/api/download")]
     public async Task Download(string path)
     {
@@ -42,7 +23,7 @@ public class FileController: ControllerBase
             return;
         }
 
-        string name = System.IO.Path.GetFileName(path);
+        string name = IOPath.GetFileName(path);
 
         try
         {
@@ -52,9 +33,9 @@ public class FileController: ControllerBase
             Response.Headers.Add("Content-Disposition", string.Format("attachment; filename=\"{0}\"; filename*=UTF-8''{0}", HttpUtility.UrlPathEncode(name)));
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
 
-            await using StreamWriter sw = new StreamWriter(Response.Body);
-            await IOFile.OpenRead(path).CopyToAsync(sw.BaseStream).ConfigureAwait(false);
-            await sw.FlushAsync().ConfigureAwait(false);
+            await using FileStream fs = IOFile.OpenRead(path);
+            await fs.CopyToAsync(Response.Body);
+            await fs.FlushAsync();
         }
         catch (Exception e)
         {
@@ -82,5 +63,32 @@ public class FileController: ControllerBase
         }
 
         return new ObjectResult("File not found.") { StatusCode = (int)HttpStatusCode.BadRequest };
+    }
+
+    [Route("/api/rename")]
+    public ObjectResult Rename(string oldPath, string newName)
+    {
+        if (!IOFile.Exists(oldPath))
+        {
+            return new BadRequestObjectResult("File not found.");
+        }
+
+        string newPath = IOPath.Combine(IOPath.GetDirectoryName(oldPath) ?? "", newName);
+
+        if (IOFile.Exists(newPath))
+        {
+            return new BadRequestObjectResult("New name already taken.");
+        }
+
+        try
+        {
+            IOFile.Move(oldPath, newPath);
+        }
+        catch (System.Exception e)
+        {
+            return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
+        }
+
+        return new OkObjectResult("The file has been renamed.");
     }
 }
