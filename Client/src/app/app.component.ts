@@ -104,7 +104,7 @@ export class AppComponent {
     new HeaderItem('name', 'Name', true),
     new HeaderItem('sizeView', 'Size (MB)', true),
     new HeaderItem('dateOfReceivingView', 'Date of Receiving', false),
-    new HeaderItem('dateOfCreationView', 'Date of Creation', false),
+    new HeaderItem('dateOfCreationView', 'Date of Creation', true),
     new HeaderItem('dateOfLastAccessView', 'Date of Last Access', false),
     new HeaderItem('dateOfLastWriteView', 'Date of Last Write', false)
   ];
@@ -114,9 +114,6 @@ export class AppComponent {
   get headerVisibleIds(): string[] {
     return this.headerVisible.map(h => h.id);
   }
-
-  // Columns toggles
-  dateOfCreationColumnIncluded: boolean = false;
 
   constructor(
       private directoriesGQL: DirectoriesGQL,

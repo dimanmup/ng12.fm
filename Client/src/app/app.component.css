@@ -76,7 +76,7 @@
     padding: 15px;
     text-align: center;
 }
-#fm #viewer tr.general td:first-of-type {
+#fm #viewer tr.general td[name=name] {
     text-align: start;
 }
 #fm #viewer tr.detail {

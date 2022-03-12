@@ -31,7 +31,7 @@
         <table mat-table [dataSource]="files" multiTemplateDataRows>
           <ng-container [matColumnDef]="h.id" *ngFor="let h of headerVisible">
             <th mat-header-cell *matHeaderCellDef>{{h.name}}</th>
-            <td mat-cell *matCellDef="let file">{{file[h.id]}}</td>
+            <td mat-cell *matCellDef="let file" [attr.name]="h.id">{{file[h.id]}}</td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="headerVisibleIds; sticky: true"></tr>
           <tr mat-row *matRowDef="let row; columns: headerVisibleIds;"
@@ -59,10 +59,9 @@
   </as-split>
 
   <div id="manager">
-    <mat-checkbox (change)="includeColumn($event.checked, 'dateOfReceivingView')">Date of Receiving</mat-checkbox>
-    <mat-checkbox (change)="includeColumn($event.checked, 'dateOfCreationView')">Date of Creation</mat-checkbox>
-    <mat-checkbox (change)="includeColumn($event.checked, 'dateOfLastAccessView')">Date of Last Access</mat-checkbox>
-    <mat-checkbox (change)="includeColumn($event.checked, 'dateOfLastWriteView')">Date of Last Write</mat-checkbox>
+    <mat-checkbox *ngFor="let h of header" 
+                  [(ngModel)]="h.visible"
+                  (change)="includeColumn($event.checked, h.id)">{{h.name}}</mat-checkbox>
   </div>
 </div>
 
