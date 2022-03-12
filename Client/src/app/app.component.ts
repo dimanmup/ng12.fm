@@ -275,13 +275,13 @@ export class AppComponent {
 
   renameFile(parentId: number, path: string) {
     let newName: string | null = prompt('New Name');
-    
+
     if (!newName || newName.match(/^\s*$/))
       return;
     
     newName = newName.replace(/(^\s*)|(\s*$)/, '');
     
-    if (!newName.match(/^[\s\.\_\-0-9A-Za-zА-Яа-я]+$/)) {
+    if (!newName.match(/^[\s\.\_\-0-9A-Za-zА-Яа-я\(\)\[\]{}]+$/)) {
       this.openSnackBar('The new name can only contain letters, numbers, internal space, dot, dash, underscore, brackets.', 'error');
       return;
     }
