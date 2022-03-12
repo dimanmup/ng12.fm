@@ -12,6 +12,7 @@ import { Title } from '@angular/platform-browser';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { MatMenuTrigger } from "@angular/material/menu";
 
 //#region Entities
 class Node {
@@ -91,6 +92,8 @@ export class AppComponent {
   nextId: number = 1;
   toggledId: number = 0;
   selectedId: number = 0;
+  contextMenuPosition: number[] = [0, 0];
+  @ViewChild(MatMenuTrigger, {static: true}) contextMenuTrigger?: MatMenuTrigger;
 
   // Level context
   directories: DirectoryNode[] = [];
@@ -250,7 +253,7 @@ export class AppComponent {
   }
   //#endregion
 
-  //#region actions
+  //#region Actions with nodes
   downloadFile(path: string) {
     //window.open(environment.uriRoot + 'api/download?path=' + path, '_blank');
     location.href = environment.uriRoot + 'api/download?path=' + path;
@@ -298,6 +301,7 @@ export class AppComponent {
         this.openSnackBar(httpErrorResponse.error, 'error');
       });
   }
+  //#endregion
 
   openSnackBar(message: string, cssClass: string) {
     const config: MatSnackBarConfig = new MatSnackBarConfig();
@@ -305,5 +309,11 @@ export class AppComponent {
     config.panelClass = cssClass;
     this.snackBar.open(message, 'Ok', config);
   }
-  //#endregion
+
+  onRightClick(event: MouseEvent) {
+    event.preventDefault();
+    this.contextMenuPosition = [event.clientX, event.clientY];
+    this.contextMenuTrigger?.openMenu();
+  }
+  
 }
