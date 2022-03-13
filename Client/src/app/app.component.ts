@@ -31,6 +31,7 @@ class DirectoryNode extends Node {
     public path: string,
     public dateOfReceiving: Date,
     public isParent: boolean = false,
+    public parentId: number = 0,
     public children?: DirectoryNode[]) {
       super(name, path, dateOfReceiving);
   }
@@ -149,7 +150,8 @@ export class AppComponent {
             c.name, 
             c.path, 
             c.dateOfReceiving, 
-            c.isParent
+            c.isParent,
+            this.toggledId
           ));
 
           this.addTreeNodeChildren(this.toggledId, this.directories);
@@ -268,6 +270,39 @@ export class AppComponent {
           this.filesRef?.refetch();
         else
           this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+      }, (httpErrorResponse: HttpErrorResponse) => {
+        console.error(httpErrorResponse);
+        this.openSnackBar(httpErrorResponse.error, 'error');
+      });
+  }
+
+  deleteFolder(node: DirectoryNode) {
+    if (!confirm('Are you shure?')) return;
+
+    const parent: DirectoryNode | undefined = this.getTreeNode(node.parentId);
+    if (!parent) {
+      console.error('Parent node not found.');
+      return;
+    }
+
+    this.http.get(environment.uriRoot + 'api/delete/folder?path=' + node.path, {responseType: 'text'})
+      .subscribe(result => {
+        console.log(result);
+
+        if (parent.id > 0) {
+          if (parent.children && parent.children.length < 2) parent.isParent = false;
+          this.treeControl.collapseDescendants(parent);
+          this.clearTreeNode(parent.id);
+          this.selectTreeNode(parent);
+        } else {
+          this.treeControl.collapseDescendants(node);
+          this.clearTreeNode(node.id);
+          this.selectedId = 0;
+          this.filesRef?.refetch();
+          this.tree = this.tree.filter(c => c.id !== node.id);
+          this.refreshTree();
+        }
+
       }, (httpErrorResponse: HttpErrorResponse) => {
         console.error(httpErrorResponse);
         this.openSnackBar(httpErrorResponse.error, 'error');

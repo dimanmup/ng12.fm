@@ -73,7 +73,7 @@
 <mat-menu #contextMenu="matMenu">
   <ng-template matMenuContent let-item="item">
     <button mat-menu-item (click)="renameFolder(item)">Rename</button>
-    <button mat-menu-item>Delete</button>
+    <button mat-menu-item (click)="deleteFolder(item)">Delete</button>
   </ng-template>
 </mat-menu>
 <div [matMenuTriggerFor]="contextMenu" 
