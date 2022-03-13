@@ -4,6 +4,12 @@
     max-width: 1000px;
     height: 500px;
 }
+#fm #current-path {
+    margin-top: 9px;
+    text-align: center;
+    font-family: Consolas;
+    color: chocolate;
+}
 #fm .panel {
     height: 100%;
 }

@@ -11,9 +11,11 @@ public class Query
             return new DirectoryNode[0];
         }
 
-        return parent
+        IEnumerable<DirectoryNode> directories = parent
             .GetDirectories("*", SearchOption.TopDirectoryOnly)
             .Select(child => new DirectoryNode(child));
+
+        return parentPath is not null ? directories : directories.Prepend(new DirectoryNode(parent, true));
     }
 
     public IEnumerable<FileNode> GetFiles([Service]Dictionary<string, string> settings, string? parentPath)

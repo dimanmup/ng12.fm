@@ -86,7 +86,7 @@ export class AppComponent {
   readonly nodePathSeparator: string = '\\';
 
   // Tree
-  nextId: number = 1;
+  nextId: number = 0;
   toggledId: number = 0;
   selectedId: number = 0;
   currentPath: string = '';
@@ -152,6 +152,7 @@ export class AppComponent {
 
           this.addTreeNodeChildren(this.toggledId, this.directories);
           this.refreshTree();
+          this.currentPath = this.tree[0].path;
         });
 
       this.filesRef = this.filesGQL
@@ -235,6 +236,7 @@ export class AppComponent {
 
   selectTreeNode(node: DirectoryNode): void {
     this.selectedId = node.id;
+    this.currentPath = node.path;
     this.filesRef?.refetch({parentPath: node.path});
   }
   //#endregion
@@ -318,10 +320,13 @@ export class AppComponent {
         node.path = nodePathParts.join(this.nodePathSeparator);
 
         this.treeControl.collapseDescendants(node);
-        if(node.id === this.selectedId) 
+        if(node.id === this.selectedId) {
           this.filesRef.refetch({parentPath: node.path});
+          this.currentPath = node.path;
+        }
         else {
           this.selectedId = 0;
+          this.currentPath = this.tree[0].path;
           this.filesRef.refetch({parentPath: undefined});
         }
 

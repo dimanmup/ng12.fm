@@ -10,6 +10,7 @@ import { NgModule } from '@angular/core';
 // Material
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -36,6 +37,7 @@ import { SizePipe } from './pipes/size';
     // Material
     MatButtonModule,
     MatCheckboxModule,
+    MatDividerModule,
     MatIconModule,
     MatMenuModule,
     MatSnackBarModule,
