@@ -83,7 +83,8 @@ class HeaderItem {
 export class AppComponent {
   readonly title: string = 'ng12.fm';
   readonly nodeNameRegExp: RegExp = /^[\s\.\_\-0-9A-Za-zА-Яа-я\(\)\[\]{}]+$/;
-  readonly nodePathSeparator: string = '\\';
+  
+  pathSeparator: string = '\\';
 
   // Tree
   nextId: number = 0;
@@ -136,8 +137,9 @@ export class AppComponent {
     private datePipe: DatePipe,
     private http: HttpClient,
     private snackBar: MatSnackBar) {
+
       titleService.setTitle(this.title);
-    
+
       this.directoriesRef = this.directoriesGQL
         .watch({ }, {fetchPolicy: 'network-only'});
 
@@ -152,9 +154,11 @@ export class AppComponent {
 
           this.addTreeNodeChildren(this.toggledId, this.directories);
           this.refreshTree();
+
+          this.pathSeparator = this.tree[0].name.substring(1); // '.\' -> '\' or './' -> '/'
           this.currentPath = this.tree[0].path;
         });
-
+      
       this.filesRef = this.filesGQL
         .watch({ }, {fetchPolicy: 'network-only'});
 
@@ -190,15 +194,15 @@ export class AppComponent {
   }
 
   findBranchByBranch(nodes: DirectoryNode[] | undefined, id: number): DirectoryNode | undefined {
-    if(!nodes) return undefined;
+    if (!nodes) return undefined;
     
     let stack: DirectoryNode[] = Array.from(nodes);
     let found: DirectoryNode;
 
     while (stack) {
       found = stack.pop()!;
-      if(found.id === id) return found;
-      if(found.children) found.children.forEach(c => stack.push(c));
+      if (found.id === id) return found;
+      if (found.children) found.children.forEach(c => stack.push(c));
     }
 
     return undefined;
@@ -313,14 +317,16 @@ export class AppComponent {
 
         node.name = <string>newName;
         
-        let nodePathParts: string[] = node.path.split(this.nodePathSeparator);
+        let nodePathParts: string[] = node.path.split(this.pathSeparator);
         nodePathParts.pop();
         nodePathParts.push(node.name);
 
-        node.path = nodePathParts.join(this.nodePathSeparator);
+        node.path = nodePathParts.join(this.pathSeparator);
 
         this.treeControl.collapseDescendants(node);
-        if(node.id === this.selectedId) {
+        this.clearTreeNode(node.id);
+
+        if (node.id === this.selectedId) {
           this.filesRef.refetch({parentPath: node.path});
           this.currentPath = node.path;
         }
@@ -349,6 +355,8 @@ export class AppComponent {
       console.error("MatMenuTrigger doesn't exist.");
       return;
     }
+
+    if (node.id === 0) return;
 
     event.preventDefault();
 

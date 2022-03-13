@@ -2,17 +2,17 @@ namespace Server;
 
 public class DirectoryNode : INode
 {
-    private readonly DirectoryInfo parent;
+    private readonly DirectoryInfo di;
     private readonly bool isGhost;
     
     public DirectoryNode(DirectoryInfo di, bool isGhost = false)
     {
-        this.parent = di;
+        this.di = di;
         this.isGhost = isGhost;
     }
 
-    public string Path => parent.FullName;
-    public string Name => isGhost ? @".\" : parent.Name;
+    public string Path => di.FullName;
+    public string Name => isGhost ? (OperatingSystem.IsWindows() ? @".\" : "./") : di.Name;
     public DateTime DateOfReceiving => DateTime.Now;
-    public bool IsParent => !isGhost && parent.GetDirectories("*", SearchOption.TopDirectoryOnly).Any();
+    public bool IsParent => !isGhost && di.GetDirectories("*", SearchOption.TopDirectoryOnly).Any();
 }
