@@ -82,6 +82,7 @@ class HeaderItem {
 })
 export class AppComponent {
   readonly title: string = 'ng12.fm';
+  readonly nodeNameRegExp: RegExp = /^[\s\.\_\-0-9A-Za-zА-Яа-я\(\)\[\]{}]+$/;
 
   // Tree
   nextId: number = 1;
@@ -144,7 +145,8 @@ export class AppComponent {
             c.name, 
             c.path, 
             c.dateOfReceiving, 
-            c.isParent));
+            c.isParent
+          ));
 
           this.addTreeNodeChildren(this.toggledId, this.directories);
           this.refreshTree();
@@ -185,19 +187,15 @@ export class AppComponent {
   }
 
   findBranchByBranch(nodes: DirectoryNode[] | undefined, id: number): DirectoryNode | undefined {
-    if(!nodes)
-      return undefined;
+    if(!nodes) return undefined;
     
     let stack: DirectoryNode[] = Array.from(nodes);
     let found: DirectoryNode;
 
     while (stack) {
       found = stack.pop()!;
-
-      if(found.id === id)
-        return found;
-      if(found.children)
-        found.children.forEach(c => stack.push(c));
+      if(found.id === id) return found;
+      if(found.children) found.children.forEach(c => stack.push(c));
     }
 
     return undefined;
@@ -212,20 +210,16 @@ export class AppComponent {
     }
 
     const node: DirectoryNode | undefined = this.getTreeNode(parentId);
-
-    if (!node)
-      return;
-    
-    node.children = children;
+    if (node) node.children = children;
   }
 
   clearTreeNode(parentId: number) {
     const node: DirectoryNode | undefined = this.getTreeNode(parentId);
 
-    if (node) {
-      node.children = undefined;
-      this.refreshTree();
-    }
+    if (!node) return;
+
+    node.children = undefined;
+    this.refreshTree();
   }
 
   toggleTreeNode(node: DirectoryNode): void {
@@ -257,9 +251,8 @@ export class AppComponent {
   }
 
   deleteFile(parentId: number, path: string) {
-    if (!confirm('Are you shure?'))
-      return;
-
+    if (!confirm('Are you shure?')) return;
+    
     this.http.get(environment.uriRoot + 'api/delete/file?path=' + path, {responseType: 'text'})
       .subscribe(result => {
         console.log(result);
@@ -276,12 +269,11 @@ export class AppComponent {
   renameFile(parentId: number, path: string) {
     let newName: string | null = prompt('New Name');
 
-    if (!newName || newName.match(/^\s*$/))
-      return;
+    if (!newName || newName.match(/^\s*$/)) return;
     
     newName = newName.replace(/(^\s*)|(\s*$)/, '');
     
-    if (!newName.match(/^[\s\.\_\-0-9A-Za-zА-Яа-я\(\)\[\]{}]+$/)) {
+    if (!newName.match(this.nodeNameRegExp)) {
       this.openSnackBar('The new name can only contain letters, numbers, internal space, dot, dash, underscore, brackets.', 'error');
       return;
     }
@@ -293,6 +285,31 @@ export class AppComponent {
           this.filesRef?.refetch();
         else
           this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+      }, (httpErrorResponse: HttpErrorResponse) => {
+        console.error(httpErrorResponse);
+        this.openSnackBar(httpErrorResponse.error, 'error');
+      });
+  }
+
+  renameFolder(node: DirectoryNode) {
+    let newName: string | null = prompt('New Name');
+
+    if (!newName || newName.match(/^\s*$/)) return;
+    
+    newName = newName.replace(/(^\s*)|(\s*$)/, '');
+    
+    if (!newName.match(this.nodeNameRegExp)) {
+      this.openSnackBar('The new name can only contain letters, numbers, internal space, dot, dash, underscore, brackets.', 'error');
+      return;
+    }
+    
+    this.http.get(environment.uriRoot + 'api/rename/folder?oldPath=' + node.path + '&newName=' + newName, {responseType: 'text'})
+      .subscribe(result => {
+        console.log(result);
+
+        node.name = <string>newName;
+        this.refreshTree();
+
       }, (httpErrorResponse: HttpErrorResponse) => {
         console.error(httpErrorResponse);
         this.openSnackBar(httpErrorResponse.error, 'error');
