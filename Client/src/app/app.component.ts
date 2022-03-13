@@ -83,11 +83,13 @@ class HeaderItem {
 export class AppComponent {
   readonly title: string = 'ng12.fm';
   readonly nodeNameRegExp: RegExp = /^[\s\.\_\-0-9A-Za-zА-Яа-я\(\)\[\]{}]+$/;
+  readonly nodePathSeparator: string = '\\';
 
   // Tree
   nextId: number = 1;
   toggledId: number = 0;
   selectedId: number = 0;
+  currentPath: string = '';
   tree: DirectoryNode[] = [];
   treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
   treeDataSource = new MatTreeNestedDataSource<DirectoryNode>();
@@ -308,7 +310,20 @@ export class AppComponent {
         console.log(result);
 
         node.name = <string>newName;
-        this.refreshTree();
+        
+        let nodePathParts: string[] = node.path.split(this.nodePathSeparator);
+        nodePathParts.pop();
+        nodePathParts.push(node.name);
+
+        node.path = nodePathParts.join(this.nodePathSeparator);
+
+        this.treeControl.collapseDescendants(node);
+        if(node.id === this.selectedId) 
+          this.filesRef.refetch({parentPath: node.path});
+        else {
+          this.selectedId = 0;
+          this.filesRef.refetch({parentPath: undefined});
+        }
 
       }, (httpErrorResponse: HttpErrorResponse) => {
         console.error(httpErrorResponse);
