@@ -63,6 +63,26 @@ public class FileController: ControllerBase
         return new OkObjectResult("The file has been deleted.");
     }
 
+    // [Route("/api/delete/folder")]
+    // public ObjectResult DeleteFolder(string path)
+    // {
+    //     if (!Directory.Exists(path))
+    //     {
+    //         return new ObjectResult("Directory not found.") { StatusCode = (int)HttpStatusCode.BadRequest };
+    //     }
+
+    //     try
+    //     {
+    //         Directory.Delete(path, true);
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
+    //     }
+
+    //     return new OkObjectResult("The file has been deleted.");
+    // }
+
     [Route("/api/rename/file")]
     public ObjectResult RenameFile(string oldPath, string newName)
     {

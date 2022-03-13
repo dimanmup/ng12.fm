@@ -64,9 +64,9 @@
   </as-split>
 
   <div id="manager">
-    <mat-checkbox *ngFor="let h of header" [(ngModel)]="h.visible" (change)="includeColumn($event.checked, h.id)">{{h.name}}</mat-checkbox>
-    <mat-divider></mat-divider>
     <div id="current-path">{{currentPath}}</div>
+    <mat-divider></mat-divider>
+    <mat-checkbox *ngFor="let h of header" [(ngModel)]="h.visible" (change)="includeColumn($event.checked, h.id)">{{h.name}}</mat-checkbox>
   </div>
 </div>
 

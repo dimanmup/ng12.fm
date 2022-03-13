@@ -5,10 +5,10 @@
     height: 500px;
 }
 #fm #current-path {
-    margin-top: 9px;
+    margin-bottom: 10px;
     text-align: center;
     font-family: Consolas;
-    color: chocolate;
+    color: goldenrod;
 }
 #fm .panel {
     height: 100%;
