@@ -20,7 +20,7 @@ class Node {
   constructor(
     public name: string,
     public path: string,
-    public dateOfReceiving: Date // To work refetch() after clicking the glyph again.
+    public dateOfReceiving: Date // To call refetch() on each click on the glyph.
     ) { }
 }
 
@@ -83,21 +83,19 @@ class HeaderItem {
 export class AppComponent {
   readonly title: string = 'ng12.fm';
 
-  // Material
-  treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
-  dataSource = new MatTreeNestedDataSource<DirectoryNode>();
-
   // Tree
-  tree: DirectoryNode[] = [];
   nextId: number = 1;
   toggledId: number = 0;
   selectedId: number = 0;
+  tree: DirectoryNode[] = [];
+  treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
+  treeDataSource = new MatTreeNestedDataSource<DirectoryNode>();
   contextMenuPosition: number[] = [0, 0];
   @ViewChild(MatMenuTrigger, {static: true}) contextMenuTrigger?: MatMenuTrigger;
 
   // Level context
   directories: DirectoryNode[] = [];
-  files: MatTableDataSource<FileNode> = new MatTableDataSource<FileNode>([]);
+  filesDataSource: MatTableDataSource<FileNode> = new MatTableDataSource<FileNode>([]);
 
   // GQL
   directoriesSubscription: Subscription;
@@ -157,7 +155,7 @@ export class AppComponent {
 
       this.filesSubscription = this.filesRef.valueChanges
         .subscribe(result => {
-          this.files.data = result.data.files.map(f => new FileNode(
+          this.filesDataSource.data = result.data.files.map(f => new FileNode(
             this.selectedId,
             f.name,
             f.path,
@@ -173,7 +171,7 @@ export class AppComponent {
   }
 
   ngAfterViewInit() {
-    this.files.sort = this.sort;
+    this.filesDataSource.sort = this.sort;
   }
 
   //#region Tree
@@ -182,8 +180,8 @@ export class AppComponent {
   isParent = (_: number, node: DirectoryNode) => node.isParent;
 
   refreshTree() {
-    this.dataSource.data = [];
-    this.dataSource.data = this.tree;
+    this.treeDataSource.data = [];
+    this.treeDataSource.data = this.tree;
   }
 
   findBranchByBranch(nodes: DirectoryNode[] | undefined, id: number): DirectoryNode | undefined {
@@ -195,6 +193,7 @@ export class AppComponent {
 
     while (stack) {
       found = stack.pop()!;
+
       if(found.id === id)
         return found;
       if(found.children)
@@ -207,7 +206,6 @@ export class AppComponent {
   getTreeNode = (id: number): DirectoryNode | undefined => this.findBranchByBranch(this.tree, id);
   
   addTreeNodeChildren(parentId: number, children: DirectoryNode[]): void {
-
     if (parentId === 0) {
       this.tree = children;
       return;
@@ -248,8 +246,7 @@ export class AppComponent {
   //#region Table
   includeColumn(include: boolean, columnName: string) {
     const h: HeaderItem | undefined = this.header.find(h => h.id === columnName);
-    if (h)
-      h.visible = include;
+    if (h) h.visible = include;
   }
   //#endregion
 
@@ -260,10 +257,10 @@ export class AppComponent {
   }
 
   deleteFile(parentId: number, path: string) {
-    if  (!confirm('Are you shure?'))
+    if (!confirm('Are you shure?'))
       return;
 
-    this.http.get(environment.uriRoot + 'api/delete?path=' + path, {responseType: 'text'})
+    this.http.get(environment.uriRoot + 'api/delete/file?path=' + path, {responseType: 'text'})
       .subscribe(result => {
         console.log(result);
         if (parentId === 0)
@@ -289,7 +286,7 @@ export class AppComponent {
       return;
     }
     
-    this.http.get(environment.uriRoot + 'api/rename?oldPath=' + path + '&newName=' + newName, {responseType: 'text'})
+    this.http.get(environment.uriRoot + 'api/rename/file?oldPath=' + path + '&newName=' + newName, {responseType: 'text'})
       .subscribe(result => {
         console.log(result);
         if (parentId === 0)
@@ -310,10 +307,17 @@ export class AppComponent {
     this.snackBar.open(message, 'Ok', config);
   }
 
-  onRightClick(event: MouseEvent) {
+  onRightClick(event: MouseEvent, node: DirectoryNode) {
+    if (!this.contextMenuTrigger) {
+      console.error("MatMenuTrigger doesn't exist.");
+      return;
+    }
+
     event.preventDefault();
+
     this.contextMenuPosition = [event.clientX, event.clientY];
-    this.contextMenuTrigger?.openMenu();
+    this.contextMenuTrigger.menuData = {item: node};
+    this.contextMenuTrigger.openMenu();
   }
   
 }

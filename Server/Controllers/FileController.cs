@@ -1,10 +1,8 @@
-using System.IO;
-using System.Net;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
-using IOFile = System.IO.File;
-using IOPath = System.IO.Path;
+using System.Net;
+using System.Web;
+using IO = System.IO;
 
 namespace Server.Controllers;
 
@@ -14,7 +12,7 @@ public class FileController: ControllerBase
     [Route("/api/download")]
     public async Task Download(string path)
     {
-        if (!IOFile.Exists(path))
+        if (!IO.File.Exists(path))
         {
             Response.StatusCode = (int)HttpStatusCode.BadRequest;
             Response.ContentType = "text/plain";
@@ -23,7 +21,7 @@ public class FileController: ControllerBase
             return;
         }
 
-        string name = IOPath.GetFileName(path);
+        string name = IO.Path.GetFileName(path);
 
         try
         {
@@ -33,7 +31,7 @@ public class FileController: ControllerBase
             Response.Headers.Add("Content-Disposition", string.Format("attachment; filename=\"{0}\"; filename*=UTF-8''{0}", HttpUtility.UrlPathEncode(name)));
             Response.Headers.Add("X-Content-Type-Options", "nosniff");
 
-            await using FileStream fs = IOFile.OpenRead(path);
+            await using FileStream fs = IO.File.OpenRead(path);
             await fs.CopyToAsync(Response.Body);
             await fs.FlushAsync();
         }
@@ -45,50 +43,77 @@ public class FileController: ControllerBase
         }
     }
     
-    [Route("/api/delete")]
-    public ObjectResult Delete(string path)
+    [Route("/api/delete/file")]
+    public ObjectResult DeleteFile(string path)
     {
-        if (IOFile.Exists(path))
+        if (!IO.File.Exists(path))
         {
-            try
-            {
-                IOFile.Delete(path);
-            }
-            catch (Exception e)
-            {
-                return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
-            }
-
-            return new OkObjectResult("The file has been deleted.");
+            return new ObjectResult("File not found.") { StatusCode = (int)HttpStatusCode.BadRequest };
         }
 
-        return new ObjectResult("File not found.") { StatusCode = (int)HttpStatusCode.BadRequest };
+        try
+        {
+            IO.File.Delete(path);
+        }
+        catch (Exception e)
+        {
+            return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
+        }
+
+        return new OkObjectResult("The file has been deleted.");
     }
 
-    [Route("/api/rename")]
-    public ObjectResult Rename(string oldPath, string newName)
+    [Route("/api/rename/file")]
+    public ObjectResult RenameFile(string oldPath, string newName)
     {
-        if (!IOFile.Exists(oldPath))
+        if (!IO.File.Exists(oldPath))
         {
             return new BadRequestObjectResult("File not found.");
         }
 
-        string newPath = IOPath.Combine(IOPath.GetDirectoryName(oldPath) ?? "", newName);
+        string newPath = IO.Path.Combine(IO.Path.GetDirectoryName(oldPath) ?? "", newName);
 
-        if (IOFile.Exists(newPath))
+        if (IO.File.Exists(newPath))
         {
             return new BadRequestObjectResult("New name already taken.");
         }
 
         try
         {
-            IOFile.Move(oldPath, newPath);
+            IO.File.Move(oldPath, newPath);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
         }
 
         return new OkObjectResult("The file has been renamed.");
+    }
+
+    [Route("/api/rename/folder")]
+    public ObjectResult RenameFolder(string oldPath, string newName)
+    {
+        if (!Directory.Exists(oldPath))
+        {
+            return new BadRequestObjectResult("Folder not found.");
+        }
+
+        string newPath = IO.Path.Combine(IO.Path.GetDirectoryName(oldPath) ?? "", newName);
+
+        if (Directory.Exists(newPath))
+        {
+            return new BadRequestObjectResult("New name already taken.");
+        }
+
+        try
+        {
+            Directory.Move(oldPath, newPath);
+        }
+        catch (Exception e)
+        {
+            return new ObjectResult(e.Message) { StatusCode = (int)HttpStatusCode.InternalServerError };
+        }
+        
+        return new OkObjectResult("The folder has been renamed.");
     }
 }
