@@ -158,7 +158,7 @@ export class AppComponent {
           this.refreshTree();
 
           this.pathSeparator = this.tree[0].name.substring(1); // '.\' -> '\' or './' -> '/'
-          this.currentPath = this.tree[0].path;
+          if (this.toggledId === 0) this.currentPath = this.tree[0].path;
         });
       
       this.filesRef = this.filesGQL
@@ -260,16 +260,16 @@ export class AppComponent {
     location.href = environment.uriRoot + 'api/download?path=' + path;
   }
 
-  deleteFile(parentId: number, path: string) {
+  deleteFile(node: FileNode) {
     if (!confirm('Are you shure?')) return;
     
-    this.http.get(environment.uriRoot + 'api/delete/file?path=' + path, {responseType: 'text'})
+    this.http.get(environment.uriRoot + 'api/delete/file?path=' + node.path, {responseType: 'text'})
       .subscribe(result => {
         console.log(result);
-        if (parentId === 0)
+        if (node.parentId === 0)
           this.filesRef?.refetch();
         else
-          this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+          this.filesRef?.refetch({parentPath: this.getTreeNode(node.parentId)?.path});
       }, (httpErrorResponse: HttpErrorResponse) => {
         console.error(httpErrorResponse);
         this.openSnackBar(httpErrorResponse.error, 'error');
@@ -298,8 +298,9 @@ export class AppComponent {
           this.treeControl.collapseDescendants(node);
           this.clearTreeNode(node.id);
           this.selectedId = 0;
-          this.filesRef?.refetch();
+          this.filesRef?.refetch({parentPath: undefined});
           this.tree = this.tree.filter(c => c.id !== node.id);
+          this.currentPath = this.tree[0].path;
           this.refreshTree();
         }
 
@@ -309,8 +310,8 @@ export class AppComponent {
       });
   }
 
-  renameFile(parentId: number, path: string) {
-    let newName: string | null = prompt('New Name');
+  renameFile(node: FileNode) {
+    let newName: string | null = prompt('New Name', node.name);
 
     if (!newName || newName.match(/^\s*$/)) return;
     
@@ -321,13 +322,13 @@ export class AppComponent {
       return;
     }
     
-    this.http.get(environment.uriRoot + 'api/rename/file?oldPath=' + path + '&newName=' + newName, {responseType: 'text'})
+    this.http.get(environment.uriRoot + 'api/rename/file?oldPath=' + node.path + '&newName=' + newName, {responseType: 'text'})
       .subscribe(result => {
         console.log(result);
-        if (parentId === 0)
+        if (node.parentId === 0)
           this.filesRef?.refetch();
         else
-          this.filesRef?.refetch({parentPath: this.getTreeNode(parentId)?.path});
+          this.filesRef?.refetch({parentPath: this.getTreeNode(node.parentId)?.path});
       }, (httpErrorResponse: HttpErrorResponse) => {
         console.error(httpErrorResponse);
         this.openSnackBar(httpErrorResponse.error, 'error');
@@ -335,7 +336,7 @@ export class AppComponent {
   }
 
   renameFolder(node: DirectoryNode) {
-    let newName: string | null = prompt('New Name');
+    let newName: string | null = prompt('New Name', node.name);
 
     if (!newName || newName.match(/^\s*$/)) return;
     
