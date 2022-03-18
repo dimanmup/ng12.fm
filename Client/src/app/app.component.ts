@@ -88,19 +88,19 @@ export class AppComponent {
   pathSeparator: string = '\\';
 
   // Tree
-  nextId: number = 0;
-  toggledId: number = 0;
-  selectedId: number = 0;
-  currentPath: string = '';
+  nextId = 0;
+  toggledId = 0;
+  selectedId = 0;
+  currentPath = '';
   tree: DirectoryNode[] = [];
   treeControl = new NestedTreeControl<DirectoryNode>(node => node.children);
   treeDataSource = new MatTreeNestedDataSource<DirectoryNode>();
-  contextMenuPosition: number[] = [0, 0];
+  contextMenuPosition = [0, 0];
   @ViewChild(MatMenuTrigger, {static: true}) contextMenuTrigger?: MatMenuTrigger;
 
   // Level context
   directories: DirectoryNode[] = [];
-  filesDataSource: MatTableDataSource<FileNode> = new MatTableDataSource<FileNode>([]);
+  filesDataSource = new MatTableDataSource<FileNode>([]);
 
   // GQL
   directoriesSubscription: Subscription;
@@ -127,7 +127,7 @@ export class AppComponent {
   get headerVisibleIds(): string[] {
     return this.headerVisible.map(h => h.id);
   }
-  @ViewChild(MatSort) sort: MatSort = new MatSort();
+  @ViewChild(MatSort) sort = new MatSort();
   expandedRow?: FileNode;
   
   constructor(
